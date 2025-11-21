@@ -32,10 +32,11 @@ css
 {
   "content": "오늘 하루가 너무 힘들었어..."
 }
+```
 Response
-json
+jso
 코드 복사
-{
+```{
   "id": 1,
   "content": "...",
   "emotion": "SAD",
@@ -44,6 +45,7 @@ json
   "music": "...",
   "createdAt": "2025-11-19T13:14:23"
 }
+```
 2.2 일기 상세 조회
 bash
 코드 복사
@@ -55,6 +57,7 @@ GET /api/diaries/monthly?year=2025&month=11
 Response
 json
 코드 복사
+```
 [
   {
     "id": 12,
@@ -63,6 +66,7 @@ json
     "summary": "기분 좋은 하루"
   }
 ]
+```
 3. 순간 감정(MomentEmotion) API
 3.1 감정 저장
 bash
@@ -126,7 +130,7 @@ yaml
 
 # ✅ **3) 스테이지 / 커밋 / 푸시**
 
-```bash
+'''bash
 git add .
 git commit -m "add api guide docs"
 git push origin docs-api
