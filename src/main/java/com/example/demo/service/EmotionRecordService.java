@@ -30,6 +30,7 @@ public class EmotionRecordService {
         MomentEmotion saved = repository.save(
                 MomentEmotion.builder()
                         .emotionType(request.getEmotionType())
+                        .reason(request.getReason())
                         .recordedAt(request.getRecordedAt())
                         .build()
         );

@@ -17,14 +17,16 @@ public class MomentEmotion {
     private EmotionType emotionType;
 
     @Column(columnDefinition = "TEXT")
+    private String reason;
 
     private LocalDateTime recordedAt; // 실제 기록 시간 (캘린더 타임라인용)
 
     private LocalDateTime createdAt;
 
     @Builder
-    public MomentEmotion(EmotionType emotionType, LocalDateTime recordedAt) {
+    public MomentEmotion(EmotionType emotionType, String reason, LocalDateTime recordedAt) {
         this.emotionType = emotionType;
+        this.reason = reason;
         this.recordedAt = recordedAt != null ? recordedAt : LocalDateTime.now();
         this.createdAt = LocalDateTime.now();
     }

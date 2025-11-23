@@ -9,5 +9,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class EmotionRecordRequest {
     private EmotionType emotionType;
+    private String reason;
     private LocalDateTime recordedAt; // 선택 입력, 없으면 서버에서 now()
 }

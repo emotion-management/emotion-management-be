@@ -30,7 +30,7 @@ public class MomentEmotionController {
         String typeStr = request.get("type");
         EmotionType type = EmotionType.valueOf(typeStr); // 문자열 -> Enum 변환
 
-        repository.save(new MomentEmotion(type, null));
+        repository.save(new MomentEmotion(type, null, null));
         return "감정 기록 완료!";
     }
 
