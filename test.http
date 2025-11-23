@@ -1,0 +1,34 @@
+### 1. 일기1 쓰기 (AI 답장 받기)
+POST http://localhost:8080/api/diaries
+Content-Type: application/json
+
+{
+  "content": "팀플 하는데 팀원이 잠수타서 나 혼자 다 했어. 너무 억울해.",
+  "type": "COMFORT"
+}
+
+### 1. 일기2 쓰기 (AI 답장 받기)
+POST http://localhost:8080/api/diaries
+Content-Type: application/json
+
+{
+  "content": "팀플 하는데 팀원이 잠수타서 나 혼자 다 했어. 너무 억울해.",
+  "type": "REALITY"
+}
+### 5. 순간 감정 기록하기 (화남😡)
+POST http://localhost:8080/api/emotions
+Content-Type: application/json
+
+{
+  "type": "ANGRY"
+}
+
+### 6. 이번 달 감정 기록 모아보기
+GET http://localhost:8080/api/emotions/monthly?year=2025&month=11
+
+### 2. 캘린더용 전체 조회 (리스트)
+GET http://localhost:8080/api/diaries
+
+### 7. 특정 날짜 상세 조회 (모달용)
+GET http://localhost:8080/api/diaries/summary?date=2025-11-19
+

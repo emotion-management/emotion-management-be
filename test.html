@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>심리 테스트 데모</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#f5f9f0,#fdf7cf); margin:0; padding:16px; color:#123; }
+    h1 { color:#2d7a46; }
+    section { background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+    label { display:block; margin:6px 0 2px; }
+    input, select, textarea { width:100%; padding:8px; border:1px solid #cbd5c0; border-radius:8px; }
+    button { margin-top:8px; padding:10px 14px; border:0; border-radius:10px; background:#7cc48a; color:#fff; cursor:pointer; }
+    button:hover { background:#63b372; }
+    pre { background:#f4f7f1; padding:10px; border-radius:8px; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>심리 테스트 데모</h1>
+
+  <section>
+    <h2>테스트 목록</h2>
+    <button onclick="listTests()">목록 불러오기</button>
+    <pre id="listResult"></pre>
+  </section>
+
+  <section>
+    <h2>질문 생성 (AI)</h2>
+    <label>testCode</label><input id="qTestCode" value="emotional-stability" />
+    <label>질문 개수</label><input id="qCount" value="5" />
+    <button onclick="generateQuestions()">질문 생성</button>
+    <pre id="questionsResult"></pre>
+  </section>
+
+  <section>
+    <h2>답변 제출 (AI 분석)</h2>
+    <label>testCode</label><input id="aTestCode" value="emotional-stability" />
+    <div id="questionContainer" style="margin-top:8px;"></div>
+    <small>※ 모든 질문에 답해야 제출 버튼이 활성화됩니다.</small>
+    <label>메모(선택)</label><input id="aNotes" placeholder="추가 메모" />
+    <button id="submitBtn" onclick="submitAi()" disabled>AI 분석 제출</button>
+    <pre id="submitResult"></pre>
+  </section>
+
+  <section>
+    <h2>이력 조회</h2>
+    <label>testCode</label><input id="hTestCode" value="emotional-stability" />
+    <button onclick="historyTest()">이력 불러오기</button>
+    <pre id="historyResult"></pre>
+  </section>
+
+<script>
+const api = path => 'http://localhost:8080' + path;
+const show = (id, data) => document.getElementById(id).textContent = JSON.stringify(data, null, 2);
+let currentQuestions = [];
+let currentAnswers = [];
+
+async function listTests() {
+  const res = await fetch(api('/api/tests'));
+  show('listResult', await res.json());
+}
+
+async function generateQuestions() {
+  const code = document.getElementById('qTestCode').value;
+  const cnt = document.getElementById('qCount').value || 5;
+  const res = await fetch(api(`/api/tests/generate-questions?testCode=${code}&count=${cnt}`), { method:'POST' });
+  const data = await res.json();
+  show('questionsResult', data);
+  currentQuestions = data.questions || [];
+  currentAnswers = new Array(currentQuestions.length).fill(null);
+  renderQuestionForm();
+}
+
+async function submitAi() {
+  const code = document.getElementById('aTestCode').value;
+  if (currentQuestions.length === 0) {
+    alert('먼저 질문을 생성하세요');
+    return;
+  }
+  if (currentAnswers.some(a => a === null)) {
+    alert('모든 질문에 답해주세요');
+    return;
+  }
+  const notes = document.getElementById('aNotes').value;
+  const res = await fetch(api('/api/tests/submit-ai'), {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ testCode: code, answers: currentAnswers, notes })
+  });
+  show('submitResult', await res.json());
+}
+
+async function historyTest() {
+  const code = document.getElementById('hTestCode').value;
+  const res = await fetch(api(`/api/tests/history?testCode=${code}`));
+  show('historyResult', await res.json());
+}
+
+function renderQuestionForm() {
+  const container = document.getElementById('questionContainer');
+  if (!container) return;
+  if (!currentQuestions.length) {
+    container.innerHTML = '<div style="color:#888;">먼저 질문을 생성하세요.</div>';
+    document.getElementById('submitBtn').disabled = true;
+    return;
+  }
+  container.innerHTML = currentQuestions.map((q, idx) => {
+    return `<div style="margin-bottom:8px;">
+      <div style="font-weight:600; margin-bottom:4px;">${idx+1}. ${q}</div>
+      <select data-idx="${idx}" onchange="onAnswerChange(event)" style="width:100%; padding:8px; border:1px solid #cbd5c0; border-radius:8px;">
+        <option value="">선택하세요</option>
+        <option>매우 그렇다</option>
+        <option>대체로 그렇다</option>
+        <option>보통이다</option>
+        <option>대체로 아니다</option>
+        <option>아니다</option>
+      </select>
+    </div>`;
+  }).join('');
+  updateSubmitState();
+}
+
+function onAnswerChange(e) {
+  const idx = Number(e.target.getAttribute('data-idx'));
+  const val = e.target.value;
+  currentAnswers[idx] = val || null;
+  updateSubmitState();
+}
+
+function updateSubmitState() {
+  const btn = document.getElementById('submitBtn');
+  if (!btn) return;
+  const allAnswered = currentAnswers.length > 0 && currentAnswers.every(a => a !== null);
+  btn.disabled = !allAnswered;
+}
+
+renderQuestionForm();
+</script>
+</body>
+</html>

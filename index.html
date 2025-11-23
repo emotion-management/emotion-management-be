@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>감정 일기 데모</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#f5f9f0,#fdf7cf); margin:0; padding:16px; color:#123; }
+    h1 { color:#2d7a46; }
+    section { background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+    label { display:block; margin:6px 0 2px; }
+    input, select, textarea { width:100%; padding:8px; border:1px solid #cbd5c0; border-radius:8px; }
+    button { margin-top:8px; padding:10px 14px; border:0; border-radius:10px; background:#7cc48a; color:#fff; cursor:pointer; }
+    button:hover { background:#63b372; }
+    pre { background:#f4f7f1; padding:10px; border-radius:8px; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>감정 일기 데모</h1>
+
+  <section>
+    <h2>일기 작성 (AI 피드백)</h2>
+    <label>내용</label>
+    <textarea id="diaryContent" rows="3">오늘 친구랑 영화 봄</textarea>
+    <label>피드백 스타일</label>
+    <select id="diaryType">
+      <option value="COMFORT">COMFORT</option>
+      <option value="REALITY">REALITY</option>
+    </select>
+    <label>카테고리(예: FRIEND/STUDY/MUSIC/EMOTION/OTHER)</label>
+    <input id="diaryCategory" value="FRIEND" />
+    <label>키워드(콤마 구분)</label>
+    <input id="diaryKeywords" value="친구,영화" />
+    <label>최근 심리 테스트 결과 ID (선택)</label>
+    <input id="diaryTestResultId" placeholder="예: 1" />
+    <button onclick="postDiary()">일기 저장</button>
+    <pre id="diaryResult"></pre>
+  </section>
+
+  <section>
+    <h2>감정 기록</h2>
+    <label>감정</label>
+    <select id="emotionType">
+      <option>HAPPY</option><option>SAD</option><option>ANGRY</option><option>ANXIOUS</option><option>TIRED</option>
+    </select>
+    <label>이유</label><input id="emotionReason" value="프로젝트 끝남" />
+    <label>기록 시각(ISO, 비우면 now)</label><input id="emotionTime" placeholder="2025-11-23T10:30:00" />
+    <button onclick="recordEmotion()">감정 기록</button>
+    <pre id="emotionResult"></pre>
+  </section>
+
+  <section>
+    <h2>감정 타임라인 / 요약</h2>
+    <label>날짜</label><input id="emotionDate" value="2025-11-23" />
+    <button onclick="getTimeline()">타임라인</button>
+    <button onclick="getDailySummary()">하루 요약</button>
+    <pre id="timelineResult"></pre>
+  </section>
+
+  <section>
+    <h2>기간 리포트</h2>
+    <label>시작일</label><input id="reportStart" value="2025-11-01" />
+    <label>종료일</label><input id="reportEnd" value="2025-11-23" />
+    <button onclick="getReport()">리포트 조회</button>
+    <pre id="reportResult"></pre>
+  </section>
+
+  <section>
+    <h2>심리 테스트</h2>
+    <button onclick="listTests()">테스트 목록</button>
+    <label>testCode</label><input id="testCode" value="emotional-stability" />
+    <label>score</label><input id="testScore" value="80" />
+    <label>summary</label><input id="testSummary" value="최근 감정 기복이 낮음" />
+    <button onclick="submitTest()">결과 제출</button>
+    <button onclick="historyTest()">이력 조회</button>
+    <pre id="testResult"></pre>
+  </section>
+
+<script>
+const api = path => 'http://localhost:8080' + path;
+const show = (id, data) => document.getElementById(id).textContent = JSON.stringify(data, null, 2);
+
+async function postDiary() {
+  const res = await fetch(api('/api/diaries'), {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      content: diaryContent.value,
+      type: diaryType.value,
+      category: diaryCategory.value,
+      keywords: diaryKeywords.value,
+      testResultId: diaryTestResultId.value || null
+    })
+  });
+  show('diaryResult', await res.json());
+}
+
+async function recordEmotion() {
+  const res = await fetch(api('/api/emotions/record'), {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      emotionType: emotionType.value,
+      reason: emotionReason.value,
+      recordedAt: emotionTime.value || null
+    })
+  });
+  show('emotionResult', await res.json());
+}
+
+async function getTimeline() {
+  const d = emotionDate.value;
+  const res = await fetch(api(`/api/emotions/timeline?date=${d}`));
+  show('timelineResult', await res.json());
+}
+async function getDailySummary() {
+  const d = emotionDate.value;
+  const res = await fetch(api(`/api/emotions/summary/daily?date=${d}`));
+  show('timelineResult', await res.json());
+}
+
+async function getReport() {
+  const s = reportStart.value, e = reportEnd.value;
+  const res = await fetch(api(`/api/reports?startDate=${s}&endDate=${e}`));
+  show('reportResult', await res.json());
+}
+
+async function listTests() {
+  const res = await fetch(api('/api/tests'));
+  show('testResult', await res.json());
+}
+async function submitTest() {
+  const res = await fetch(api('/api/tests/submit'), {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      testCode: testCode.value,
+      score: Number(testScore.value),
+      summary: testSummary.value
+    })
+  });
+  show('testResult', await res.json());
+}
+async function historyTest() {
+  const res = await fetch(api(`/api/tests/history?testCode=${testCode.value}`));
+  show('testResult', await res.json());
+}
+</script>
+</body>
+</html>
